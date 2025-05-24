@@ -1,5 +1,6 @@
-// We create this file to define the user model for our application.
-// Basically, this file will define the structure of the user document in the MongoDB database and what fields it will contain and their types.
+// We create this file to define the user model for our express application so our express application knows what types to handle when dealing with user data.
+// Basically, this file will define the structure of the user document later used in the schema to define the schema in the MongoDB database
+// and what fields it will contain and their types.
 
 import { Document } from "mongoose";
 
