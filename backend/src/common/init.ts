@@ -1,7 +1,16 @@
 import { Express } from "express";
+import mongooseConnect from "../database/mongodb";
 
-const appSetup = (app: Express) => {
+const appSetup = async (app: Express) => {
   // set database connections
+
+  try {
+    await mongooseConnect();
+    console.log("MongoDB connected successfully");
+  } catch (error) {
+    console.error("Error connecting to MongoDB:", error);
+    //process.exit(1); // Exit the process if the connection fails
+  }
 
   const APP_PORT = 3000;
 
