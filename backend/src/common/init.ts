@@ -1,18 +1,18 @@
 // this file is used to initialise the application and set up all the port connections and database connections.
 
 import { Express } from "express";
-import mongooseConnect from "../database/mongodb";
+//import mongooseConnect from "../database/mongodb"; // temporarily commented out to avoid errors during initial setup as we dont have a database connection set up yet.
 
 const appSetup = async (app: Express) => {
   // set database connections
 
-  try {
-    await mongooseConnect();
-    console.log("MongoDB connected successfully");
-  } catch (error) {
-    console.error("Error connecting to MongoDB:", error);
-    //process.exit(1); // Exit the process if the connection fails
-  }
+  //   try {
+  //     await mongooseConnect();
+  //     console.log("MongoDB connected successfully");
+  //   } catch (error) {
+  //     console.error("Error connecting to MongoDB:", error);
+  //     //process.exit(1); // Exit the process if the connection fails
+  //   }
 
   const APP_PORT = 3000;
 
