@@ -1,3 +1,5 @@
+// this file is used to initialise the application and set up all the port connections and database connections.
+
 import { Express } from "express";
 import mongooseConnect from "../database/mongodb";
 
