@@ -1,17 +1,8 @@
-import express, { Request, Response } from "express";
+import express from "express";
 const app = express();
 
-// database connections
+import appSetup from "./common/init";
+import routerSetup from "./common/router";
 
-// routes
-app.get("/", (req: Request, res: Response) => {
-  res.send("Hello World!");
-});
-
-// some more stuff
-
-const APP_PORT = 3000;
-
-app.listen(APP_PORT, () => {
-  console.log(`Server started on port ${APP_PORT}`);
-});
+appSetup(app);
+routerSetup(app);
