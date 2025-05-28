@@ -1,10 +1,12 @@
 // this file is basically where we setup all of our incoming routes and their handlers.
 
-import { Express, Request, Response } from "express";
+import { Express } from "express";
+import userRoutes from "../routes/user.routes";
 
-const routerSetup = (app: Express) =>
-  app.get("/", async (req: Request, res: Response) => {
-    res.send("Hello Express API!");
-  });
+const routerSetup = (app: Express) => {
+  app.use("/users", userRoutes);
+
+  // Add more routes here as needed
+};
 
 export default routerSetup;
