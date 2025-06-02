@@ -1,8 +1,16 @@
 import { Router } from "express";
-import customerController from "../controller/customer.controller";
+import {
+    getCustomers,
+    createCustomer,
+    updateCustomer,
+    deleteCustomer,
+} from "../controller/customer.controller";
 
 const router = Router();
 
-router.get("/", customerController);
+router.get("/", getCustomers);
+router.post("/", createCustomer);
+router.put("/:id", updateCustomer);
+router.delete("/:id", deleteCustomer);
 
 export default router;
