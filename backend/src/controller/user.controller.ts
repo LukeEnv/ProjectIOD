@@ -19,6 +19,7 @@ export const getUsers = (req: Request, res: Response) => {
 
 export const createUser = (req: Request, res: Response) => {
   const data: IUser = req.body;
+  console.log(req.body);
   console.log(data);
   new userSchema(data)
     .save()

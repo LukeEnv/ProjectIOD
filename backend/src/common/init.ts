@@ -1,10 +1,12 @@
 // this file is used to initialise the application and set up all the port connections and database connections.
 
-import { Express } from "express";
+import express, { Express } from "express";
 import mongooseConnect from "../database/mongodb"; // temporarily commented out to avoid errors during initial setup as we dont have a database connection set up yet.
 
 const appSetup = async (app: Express) => {
   // set database connections
+
+  app.use(express.json()); // Middleware to parse JSON bodies
 
   try {
     await mongooseConnect();
