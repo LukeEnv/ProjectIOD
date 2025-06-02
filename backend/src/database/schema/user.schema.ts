@@ -47,4 +47,4 @@ const schema = new Schema<IUser>(
   }
 );
 
-export default model<IUser>("user", schema);
+export default model<IUser>("Users", schema);
