@@ -29,7 +29,8 @@ const schema = new Schema<ITask>(
       required: true,
     },
     userId: {
-      type: Number,
+      type: Schema.Types.ObjectId,
+      ref: "Users", // Assuming you have a User model
       required: true,
     },
     createdAt: {
