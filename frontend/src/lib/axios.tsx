@@ -1,57 +1,61 @@
 import axios from "axios";
+import { useTokenContext } from "@/lib/contexts/token";
+import { useMemo } from "react";
 
-// Access token is set by the useAuth context
-let accessToken: string | null = null;
-
-export function setAccessToken(token: string | null) {
-  accessToken = token;
-}
-
-const api = axios.create({
+export const api = axios.create({
   baseURL: "/api/v1",
-  withCredentials: true, // Ensures cookies (refresh token) are sent
+  withCredentials: true,
 });
 
-// **Request Interceptor** - Attach Access Token to API calls
-api.interceptors.request.use(
-  (config) => {
-    if (accessToken) {
-      config.headers.Authorization = `Bearer ${accessToken}`;
-    }
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
-
-// **Response Interceptor** - Refresh token on 401 error
-api.interceptors.response.use(
-  (response) => response,
-  async (error) => {
-    if (error.response?.status === 401) {
-      try {
-        console.log("Access token expired, refreshing...");
-        const res = await axios.post(
-          "/api/v1/auth/refresh",
-          {},
-          { withCredentials: true }
-        );
-
-        setAccessToken(res.data.token); // Store new access token
-
-        // Retry the failed request with the new token
-        error.config.headers.Authorization = `Bearer ${res.data.accessToken}`;
-        return api.request(error.config);
-      } catch (refreshError) {
-        console.error("Failed to refresh token, logging out...");
-        return Promise.reject(refreshError);
-      }
-    }
-    return Promise.reject(error);
-  }
-);
-
 // **SWR Fetcher Function**
-const fetcher = (url: string) => api.get(url).then((res) => res.data);
+export const fetcher = (url: string, accessToken?: string | null) =>
+  api
+    .get(url, {
+      headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
+    })
+    .then((res) => res.data);
 
-export { api, fetcher };
-// Do NOT export accessToken directly. Only set via setAccessToken from useAuth.
+export function useAuthAxios() {
+  const { accessToken, refreshAccessToken } = useTokenContext();
+
+  return useMemo(() => {
+    const instance = axios.create({
+      baseURL: "/api/v1",
+      withCredentials: true,
+    });
+
+    // Request interceptor: attach token
+    instance.interceptors.request.use(
+      (config) => {
+        if (accessToken) {
+          config.headers = config.headers || {};
+          config.headers.Authorization = `Bearer ${accessToken}`;
+        }
+        return config;
+      },
+      (error) => Promise.reject(error)
+    );
+
+    // Response interceptor: handle 401 and refresh
+    instance.interceptors.response.use(
+      (response) => response,
+      async (error) => {
+        if (error.response?.status === 401 && refreshAccessToken) {
+          try {
+            await refreshAccessToken();
+            // Retry the original request with the new token
+            if (accessToken) {
+              error.config.headers.Authorization = `Bearer ${accessToken}`;
+            }
+            return instance.request(error.config);
+          } catch (refreshError) {
+            return Promise.reject(refreshError);
+          }
+        }
+        return Promise.reject(error);
+      }
+    );
+
+    return instance;
+  }, [accessToken, refreshAccessToken]);
+}

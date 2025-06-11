@@ -3,11 +3,11 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import axios from "axios";
 import { toast } from "sonner";
+
 interface TokenContextType {
   isAuthenticated: boolean;
   accessToken: string | null;
   accessTokenExpiry: number | null;
-  setAccessToken: (token: string | null) => void;
   refreshAccessToken: () => Promise<void>;
   signout: () => Promise<void>;
   loading: boolean;
@@ -38,15 +38,9 @@ export const TokenProvider: React.FC<{ children: React.ReactNode }> = ({
         setAccessTokenExpiry(null);
         return;
       }
-
       const { accessToken, accessTokenExpiry } = response.data;
       setAccessToken(accessToken);
       setAccessTokenExpiry(accessTokenExpiry);
-      if (accessToken) {
-        axios.defaults.headers.common[
-          "Authorization"
-        ] = `Bearer ${accessToken}`;
-      }
     } catch {
       setAccessToken(null);
       setAccessTokenExpiry(null);
@@ -62,9 +56,6 @@ export const TokenProvider: React.FC<{ children: React.ReactNode }> = ({
       await axios.post("/api/auth/refresh-token/logout");
       setAccessToken(null);
       setAccessTokenExpiry(null);
-      if (typeof window !== "undefined") {
-        delete axios.defaults.headers.common["Authorization"];
-      }
     } catch (error) {
       console.error("Error signing out:", error);
     } finally {
@@ -96,7 +87,6 @@ export const TokenProvider: React.FC<{ children: React.ReactNode }> = ({
         isAuthenticated,
         accessToken,
         accessTokenExpiry,
-        setAccessToken,
         refreshAccessToken,
         signout,
         loading,

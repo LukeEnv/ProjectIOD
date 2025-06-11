@@ -1,11 +1,10 @@
 "use client";
 
-import { createContext, useContext, useEffect } from "react";
-import axios from "axios";
+import { createContext, useContext } from "react";
+import { api, fetcher } from "../axios";
 import { User } from "@/types/user";
 import useSWR from "swr";
 import { toast } from "sonner";
-import { useTokenContext } from "./token";
 interface UserContextType {
   refetchUser: () => Promise<void>;
   updateUser: (updatedUser: {
@@ -21,24 +20,11 @@ const UserContext = createContext<UserContextType | undefined>(undefined);
 export const UserProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const { accessToken } = useTokenContext();
-
-  const { data: user, mutate: refetchUser } = useSWR(
-    `/api/me`,
-    async (url: string) => {
-      const res = await axios.get(url, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      });
-      return res.data;
-    },
-    {
-      revalidateOnFocus: false,
-      shouldRetryOnError: true,
-      refreshInterval: 0, // Disable automatic revalidation
-    }
-  );
+  const { data: user, mutate: refetchUser } = useSWR(`/api/me`, fetcher, {
+    revalidateOnFocus: false,
+    shouldRetryOnError: true,
+    refreshInterval: 0, // Disable automatic revalidation
+  });
 
   const updateUser = async (updatedUser: {
     name?: string;
@@ -46,11 +32,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({
     password?: string;
   }) => {
     try {
-      const response = await axios.put(`/api/me`, updatedUser, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      });
+      const response = await api.put(`/api/me`, updatedUser);
       refetchUser();
       toast.success("User updated successfully!");
       return response.data;
@@ -59,13 +41,6 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({
       throw error;
     }
   };
-
-  // Call refetchUser only when a valid token is present
-  useEffect(() => {
-    if (accessToken) {
-      refetchUser();
-    }
-  }, [accessToken]);
 
   return (
     <UserContext.Provider

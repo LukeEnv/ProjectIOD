@@ -16,7 +16,7 @@ const appSetup = async (app: Express) => {
     //process.exit(1); // Exit the process if the connection fails
   }
 
-  const APP_PORT = 3000;
+  const APP_PORT = 4000;
 
   app.listen(APP_PORT, () => {
     console.log(`Server started on port ${APP_PORT}`);
