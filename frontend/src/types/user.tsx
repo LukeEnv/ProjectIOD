@@ -7,4 +7,5 @@ export type User = {
   password?: string; // Optional for security reasons, not returned in user data
   createdAt: string;
   updatedAt: string;
+  isAdmin?: boolean;
 };

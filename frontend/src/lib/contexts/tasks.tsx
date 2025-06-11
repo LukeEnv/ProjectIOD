@@ -1,0 +1,89 @@
+import React, { createContext, useContext } from "react";
+import useSWR from "swr";
+import { Task } from "@/types/task";
+import { toast } from "sonner";
+import { useAuthAxios } from "@/lib/axios";
+
+interface TasksContextType {
+  tasks: Task[] | undefined;
+  isLoading: boolean;
+  isError: boolean;
+  refetchTasks: () => void;
+  createTask: (task: Partial<Task>) => Promise<void>;
+  updateTask: (id: string, updates: Partial<Task>) => Promise<void>;
+  deleteTask: (id: string) => Promise<void>;
+}
+
+const TasksContext = createContext<TasksContextType | undefined>(undefined);
+
+export const TasksProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
+  const authAxios = useAuthAxios();
+
+  // SWR fetcher using authenticated axios
+  const fetcher = async (url: string) => {
+    const res = await authAxios.get(url);
+    return res.data;
+  };
+
+  const { data, error, isLoading, mutate } = useSWR<Task[]>(
+    "/api/tasks",
+    fetcher
+  );
+
+  const refetchTasks = () => mutate();
+
+  const createTask = async (task: Partial<Task>) => {
+    try {
+      await authAxios.post("/api/tasks", task);
+      mutate();
+      toast.success("Task created");
+    } catch {
+      toast.error("Failed to create task");
+    }
+  };
+
+  const updateTask = async (id: string, updates: Partial<Task>) => {
+    try {
+      await authAxios.put(`/api/tasks/${id}`, updates);
+      mutate();
+      toast.success("Task updated");
+    } catch {
+      toast.error("Failed to update task");
+    }
+  };
+
+  const deleteTask = async (id: string) => {
+    try {
+      await authAxios.delete(`/api/tasks/${id}`);
+      mutate();
+      toast.success("Task deleted");
+    } catch {
+      toast.error("Failed to delete task");
+    }
+  };
+
+  return (
+    <TasksContext.Provider
+      value={{
+        tasks: data,
+        isLoading,
+        isError: !!error,
+        refetchTasks,
+        createTask,
+        updateTask,
+        deleteTask,
+      }}
+    >
+      {children}
+    </TasksContext.Provider>
+  );
+};
+
+export const useTasksContext = () => {
+  const context = useContext(TasksContext);
+  if (!context)
+    throw new Error("useTasksContext must be used within a TasksProvider");
+  return context;
+};
