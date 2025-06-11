@@ -79,6 +79,8 @@ export const refreshToken = async (
 ): Promise<void> => {
   try {
     const token = req.cookies.refreshToken;
+    console.log("HELLO????");
+    console.log("Received refresh token:", token);
     if (!token) {
       res.status(401).json({ message: "No refresh token provided" });
       return;
@@ -88,12 +90,16 @@ export const refreshToken = async (
       res.status(401).json({ message: "Invalid refresh token" });
       return;
     }
-    const accessToken = generateAccessToken(payload);
+    // Remove iat/exp from payload to avoid jwt sign error
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { iat, exp, ...cleanPayload } = payload;
+    const accessToken = generateAccessToken(cleanPayload);
     res.status(200).json({
       accessToken,
       accessTokenExpiry: Date.now() + 15 * 60 * 1000, // 15 minutes expiry
     });
-  } catch (_) {
+  } catch (error) {
+    console.error("Error refreshing token:", error);
     res.status(401).json({ message: "Invalid or expired refresh token" });
   }
 };
@@ -102,6 +108,7 @@ export const logoutUser = async (
   req: Request,
   res: Response
 ): Promise<void> => {
+  console.log("Logging out user");
   res.clearCookie("refreshToken", {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",

@@ -3,7 +3,7 @@ import { useTokenContext } from "@/lib/contexts/token";
 import { useMemo } from "react";
 
 export const api = axios.create({
-  baseURL: "/api/v1",
+  baseURL: "/api",
   withCredentials: true,
 });
 
@@ -20,7 +20,7 @@ export function useAuthAxios() {
 
   return useMemo(() => {
     const instance = axios.create({
-      baseURL: "/api/v1",
+      baseURL: "/api",
       withCredentials: true,
     });
 
@@ -40,14 +40,22 @@ export function useAuthAxios() {
     instance.interceptors.response.use(
       (response) => response,
       async (error) => {
-        if (error.response?.status === 401 && refreshAccessToken) {
+        const originalRequest = error.config;
+        // Prevent infinite loop: don't try to refresh if already on refresh endpoint
+        if (
+          error.response?.status === 401 &&
+          refreshAccessToken &&
+          !originalRequest._retry &&
+          !originalRequest.url.includes("/auth/refresh-token")
+        ) {
+          originalRequest._retry = true;
           try {
             await refreshAccessToken();
             // Retry the original request with the new token
             if (accessToken) {
-              error.config.headers.Authorization = `Bearer ${accessToken}`;
+              originalRequest.headers.Authorization = `Bearer ${accessToken}`;
             }
-            return instance.request(error.config);
+            return instance.request(originalRequest);
           } catch (refreshError) {
             return Promise.reject(refreshError);
           }

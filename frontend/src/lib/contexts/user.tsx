@@ -1,8 +1,9 @@
 "use client";
 
 import { createContext, useContext } from "react";
-import { api, fetcher } from "../axios";
+import { useAuthAxios } from "../axios";
 import { User } from "@/types/user";
+import { Customer } from "@/types/customer";
 import useSWR from "swr";
 import { toast } from "sonner";
 interface UserContextType {
@@ -13,6 +14,7 @@ interface UserContextType {
     password?: string;
   }) => Promise<void>;
   user: User | null;
+  createCustomer: (customer: Partial<Customer>) => Promise<unknown>;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -20,7 +22,14 @@ const UserContext = createContext<UserContextType | undefined>(undefined);
 export const UserProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const { data: user, mutate: refetchUser } = useSWR(`/api/me`, fetcher, {
+  const api = useAuthAxios();
+
+  const fetcher = async (url: string) => {
+    const res = await api.get(url);
+    return res.data;
+  };
+
+  const { data: user, mutate: refetchUser } = useSWR(`/users/me`, fetcher, {
     revalidateOnFocus: false,
     shouldRetryOnError: true,
     refreshInterval: 0, // Disable automatic revalidation
@@ -32,12 +41,23 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({
     password?: string;
   }) => {
     try {
-      const response = await api.put(`/api/me`, updatedUser);
+      const response = await api.put(`/users/me`, updatedUser);
       refetchUser();
       toast.success("User updated successfully!");
       return response.data;
     } catch (error) {
       console.error("Error updating user:", error);
+      throw error;
+    }
+  };
+
+  const createCustomer = async (customer: Partial<Customer>) => {
+    try {
+      const response = await api.post("/customers", customer);
+      toast.success("Customer created successfully!");
+      return response.data;
+    } catch (error) {
+      toast.error("Failed to create customer");
       throw error;
     }
   };
@@ -48,6 +68,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({
         refetchUser,
         updateUser,
         user,
+        createCustomer,
       }}
     >
       {children}
@@ -62,3 +83,19 @@ export const useUserContext = (): UserContextType => {
   }
   return context;
 };
+
+export function useAllUsers() {
+  const authAxios = useAuthAxios();
+  return useSWR("/users", async (url) => {
+    const res = await authAxios.get(url);
+    return res.data.data;
+  });
+}
+
+export function useAllCustomers() {
+  const authAxios = useAuthAxios();
+  return useSWR("/customers", async (url) => {
+    const res = await authAxios.get(url);
+    return res.data.data;
+  });
+}

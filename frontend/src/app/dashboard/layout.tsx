@@ -1,6 +1,7 @@
 "use client";
 
 import Header from "@/components/header";
+import { TasksProvider } from "@/lib/contexts/tasks";
 
 export default function DashboardLayout({
   children,
@@ -10,7 +11,9 @@ export default function DashboardLayout({
   return (
     <div className="flex flex-col h-screen">
       <Header />
-      <main className="flex-1 overflow-y-auto p-6">{children}</main>
+      <TasksProvider>
+        <main className="flex-1 overflow-y-auto p-6">{children}</main>
+      </TasksProvider>
     </div>
   );
 }

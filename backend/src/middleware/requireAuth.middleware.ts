@@ -1,35 +1,46 @@
 import { Request, Response, NextFunction } from "express";
-import jwt from "jsonwebtoken";
-import userSchema from "../database/schema/user.schema";
+import { verifyAccessToken } from "../common/jwt";
+import { findUserById } from "../service/user.service";
+import { IUser } from "../database/model/user.model";
 
-const JWT_SECRET = process.env.JWT_SECRET || "changeme";
-
-export function requireAuth(req: Request, res: Response, next: NextFunction) {
-  const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    res.status(401).json({ message: "No token provided" });
-    return;
-  }
-  const token = authHeader.split(" ")[1];
-  let decoded: { id: string };
-  try {
-    decoded = jwt.verify(token, JWT_SECRET) as { id: string };
-  } catch {
-    res.status(401).json({ message: "Invalid or expired token" });
-    return;
-  }
-  userSchema
-    .findById(decoded.id)
-    .then((user) => {
-      if (!user) {
-        res.status(401).json({ message: "User not found" });
-        return;
-      }
-      // @ts-expect-error req.user is set by middleware for downstream use
-      req.user = { id: user._id.toString(), isAdmin: user.isAdmin };
-      next();
-    })
-    .catch(() => {
-      res.status(401).json({ message: "Invalid or expired token" });
-    });
+export interface AuthenticatedRequest extends Request {
+  user?: IUser;
 }
+
+export const requireAuth = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    res.status(401).json({ message: "Unauthorized: No token provided" });
+    return;
+  }
+
+  const token = authHeader.split(" ")[1];
+
+  try {
+    const decoded = await verifyAccessToken(token);
+    console.log(decoded);
+    if (!decoded || !decoded.userId) {
+      res.status(401).json({ message: "Unauthorized: Invalid token" });
+      return;
+    }
+    // Ensure userId is a string for findUserById
+    const userId = decoded.userId.toString();
+    const user = await findUserById(userId);
+    console.log(user);
+    if (!user) {
+      res.status(401).json({ message: "Unauthorized: User not found" });
+      return;
+    }
+    req.user = user;
+    console.log(req.user);
+    next();
+  } catch (error) {
+    console.log(error);
+    res.status(401).json({ message: "Unauthorized: Invalid token" });
+  }
+};

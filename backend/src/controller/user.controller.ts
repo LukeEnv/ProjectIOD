@@ -6,6 +6,7 @@ import bcrypt from "bcrypt";
 
 import userSchema from "../database/schema/user.schema";
 import { IUser } from "../database/model/user.model";
+import { AuthenticatedRequest } from "../middleware/requireAuth.middleware";
 
 export const getUsers = (req: Request, res: Response) => {
   userSchema
@@ -57,4 +58,15 @@ export const deleteUser = (req: Request, res: Response) => {
       console.log(err);
       res.send({ result: 500, error: err.message });
     });
+};
+
+export const getMe = (req: AuthenticatedRequest, res: Response): void => {
+  if (!req.user) {
+    res.status(401).json({ message: "Not authenticated" });
+    return;
+  }
+  const userObj =
+    typeof req.user.toObject === "function" ? req.user.toObject() : req.user;
+  if (userObj.password) delete userObj.password;
+  res.json(userObj);
 };

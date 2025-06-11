@@ -13,6 +13,8 @@ export const getTasks: RequestHandler = (req, res) => {
   }
   taskSchema
     .find(query)
+    .populate("userId", "-password")
+    .populate("createdBy", "-password")
     .then((tasks) => {
       res.send({ result: 200, data: tasks });
     })
@@ -33,11 +35,21 @@ export const createTask: RequestHandler = (req, res) => {
     // Admin can assign to any user
     assignedUserId = req.body.userId;
   }
-  const data: ITask = { ...req.body, userId: assignedUserId };
+  const data: ITask = {
+    ...req.body,
+    userId: assignedUserId,
+    createdBy: user.id,
+  };
   new taskSchema(data)
     .save()
-    .then((newTask) => {
-      res.send({ result: 200, data: newTask });
+    .then((newTask) =>
+      taskSchema
+        .findById(newTask._id)
+        .populate("userId", "-password")
+        .populate("createdBy", "-password")
+    )
+    .then((populatedTask) => {
+      res.send({ result: 200, data: populatedTask });
     })
     .catch((err) => {
       console.log(err);

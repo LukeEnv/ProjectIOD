@@ -10,3 +10,8 @@ export const findUserByUsername = async (username: string) => {
   // Return the user object
   return user;
 };
+
+export const findUserById = async (id: string) => {
+  // Find the user by ID and include the password field (if needed)
+  return userSchema.findById(id);
+};

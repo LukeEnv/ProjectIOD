@@ -11,6 +11,7 @@ router.post("/login", async (req, res) => {
   await loginUser(req, res);
 });
 router.post("/refresh-token", async (req, res) => {
+  console.log("Received request to refresh token");
   await refreshToken(req, res);
 });
 router.post("/refresh-token/logout", async (req, res) => {

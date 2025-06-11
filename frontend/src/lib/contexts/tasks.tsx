@@ -1,3 +1,5 @@
+"use client";
+
 import React, { createContext, useContext } from "react";
 import useSWR from "swr";
 import { Task } from "@/types/task";
@@ -27,16 +29,13 @@ export const TasksProvider: React.FC<{ children: React.ReactNode }> = ({
     return res.data;
   };
 
-  const { data, error, isLoading, mutate } = useSWR<Task[]>(
-    "/api/tasks",
-    fetcher
-  );
+  const { data, error, isLoading, mutate } = useSWR<Task[]>("/tasks", fetcher);
 
   const refetchTasks = () => mutate();
 
   const createTask = async (task: Partial<Task>) => {
     try {
-      await authAxios.post("/api/tasks", task);
+      await authAxios.post("/tasks", task);
       mutate();
       toast.success("Task created");
     } catch {
@@ -46,7 +45,7 @@ export const TasksProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const updateTask = async (id: string, updates: Partial<Task>) => {
     try {
-      await authAxios.put(`/api/tasks/${id}`, updates);
+      await authAxios.put(`/tasks/${id}`, updates);
       mutate();
       toast.success("Task updated");
     } catch {
@@ -56,7 +55,7 @@ export const TasksProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const deleteTask = async (id: string) => {
     try {
-      await authAxios.delete(`/api/tasks/${id}`);
+      await authAxios.delete(`/tasks/${id}`);
       mutate();
       toast.success("Task deleted");
     } catch {

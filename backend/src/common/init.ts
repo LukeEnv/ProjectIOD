@@ -2,11 +2,13 @@
 
 import express, { Express } from "express";
 import mongooseConnect from "../database/mongodb"; // temporarily commented out to avoid errors during initial setup as we dont have a database connection set up yet.
+import cookieParser from "cookie-parser";
 
 const appSetup = async (app: Express) => {
   // set database connections
 
   app.use(express.json()); // Middleware to parse JSON bodies
+  app.use(cookieParser()); // Middleware to parse cookies
 
   try {
     await mongooseConnect();
