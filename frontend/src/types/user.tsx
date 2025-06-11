@@ -1,10 +1,11 @@
 export type User = {
-  id: string;
+  _id: string; // Add this line
+  id?: string; // Keep for compatibility if needed
   firstName: string;
   lastName: string;
   username: string;
   email: string;
-  password?: string; // Optional for security reasons, not returned in user data
+  password?: string;
   createdAt: string;
   updatedAt: string;
   isAdmin?: boolean;

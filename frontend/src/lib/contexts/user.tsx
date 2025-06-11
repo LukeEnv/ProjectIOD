@@ -6,6 +6,8 @@ import { User } from "@/types/user";
 import { Customer } from "@/types/customer";
 import useSWR from "swr";
 import { toast } from "sonner";
+import { useTokenContext } from "@/lib/contexts/token";
+
 interface UserContextType {
   refetchUser: () => Promise<void>;
   updateUser: (updatedUser: {
@@ -23,17 +25,24 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const api = useAuthAxios();
+  const { initialized, accessToken } = useTokenContext();
 
   const fetcher = async (url: string) => {
     const res = await api.get(url);
     return res.data;
   };
 
-  const { data: user, mutate: refetchUser } = useSWR(`/users/me`, fetcher, {
-    revalidateOnFocus: false,
-    shouldRetryOnError: true,
-    refreshInterval: 0, // Disable automatic revalidation
-  });
+  // Only fetch when initialized and accessToken are ready
+  const shouldFetch = initialized && !!accessToken;
+  const { data: user, mutate: refetchUser } = useSWR(
+    shouldFetch ? `/users/me` : null,
+    shouldFetch ? fetcher : null,
+    {
+      revalidateOnFocus: false,
+      shouldRetryOnError: true,
+      refreshInterval: 0, // Disable automatic revalidation
+    }
+  );
 
   const updateUser = async (updatedUser: {
     name?: string;

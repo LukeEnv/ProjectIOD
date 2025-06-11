@@ -2,9 +2,14 @@ import useSWR from "swr";
 import { useAuthAxios } from "../axios";
 
 export interface Customer {
-  _id: string;
-  name: string;
-  // Add other fields as needed
+  _id?: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: number;
+  address: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export function useAllCustomers() {

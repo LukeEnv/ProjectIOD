@@ -5,6 +5,7 @@ import useSWR from "swr";
 import { Task } from "@/types/task";
 import { toast } from "sonner";
 import { useAuthAxios } from "@/lib/axios";
+import { useTokenContext } from "@/lib/contexts/token";
 
 interface TasksContextType {
   tasks: Task[] | undefined;
@@ -22,6 +23,7 @@ export const TasksProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const authAxios = useAuthAxios();
+  const { initialized, accessToken } = useTokenContext();
 
   // SWR fetcher using authenticated axios
   const fetcher = async (url: string) => {
@@ -29,7 +31,12 @@ export const TasksProvider: React.FC<{ children: React.ReactNode }> = ({
     return res.data;
   };
 
-  const { data, error, isLoading, mutate } = useSWR<Task[]>("/tasks", fetcher);
+  // Only fetch when initialized and accessToken are ready
+  const shouldFetch = initialized && !!accessToken;
+  const { data, error, isLoading, mutate } = useSWR<Task[]>(
+    shouldFetch ? "/tasks" : null,
+    shouldFetch ? fetcher : null
+  );
 
   const refetchTasks = () => mutate();
 
