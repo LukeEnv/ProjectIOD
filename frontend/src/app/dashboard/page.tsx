@@ -230,7 +230,14 @@ export default function Dashboard() {
               </SelectTrigger>
               <SelectContent>
                 {allUsers &&
-                  (allUsers as { _id: string; firstName: string; lastName: string; username: string }[]).map((u) => (
+                  (
+                    allUsers as {
+                      _id: string;
+                      firstName: string;
+                      lastName: string;
+                      username: string;
+                    }[]
+                  ).map((u) => (
                     <SelectItem key={u._id} value={u._id}>
                       {u.firstName} {u.lastName} ({u.username})
                     </SelectItem>
@@ -519,7 +526,14 @@ export default function Dashboard() {
                 </SelectTrigger>
                 <SelectContent>
                   {allUsers &&
-                    (allUsers as { _id: string; firstName: string; lastName: string; username: string }[]).map((u) => (
+                    (
+                      allUsers as {
+                        _id: string;
+                        firstName: string;
+                        lastName: string;
+                        username: string;
+                      }[]
+                    ).map((u) => (
                       <SelectItem key={u._id} value={u._id}>
                         {u.firstName} {u.lastName} ({u.username})
                       </SelectItem>
