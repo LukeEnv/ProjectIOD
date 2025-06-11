@@ -20,7 +20,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
-//import { useDarkMode } from "@/lib/contexts/darkmode";
+import { useDarkMode } from "@/lib/contexts/darkmode";
 import {
   Tooltip,
   TooltipTrigger,
@@ -33,11 +33,11 @@ export default function Header() {
   const { user } = useUserContext();
   const { signout } = useTokenContext();
   const pathname = usePathname();
-  //const { toggleDarkMode, isDarkMode } = useDarkMode();
+  const { toggleDarkMode, isDarkMode } = useDarkMode();
 
   return (
     <>
-      <div className="w-full bg-blue-500 text-white">
+      <div className="w-full text-white">
         <div className="flex w-full px-6 py-4 gap-8 items-center">
           <div className="flex gap-2">
             <TooltipProvider>
@@ -77,7 +77,7 @@ export default function Header() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size={"icon"}>
-                  <User />
+                  <User className="text-black" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="font-poppins font-semibold font-sm w-52">
@@ -86,10 +86,10 @@ export default function Header() {
                   <p className="text-lg">{user?.firstName}</p>
                 </div>
                 <DropdownMenuSeparator />
-                {/* <DropdownMenuItem onClick={toggleDarkMode}>
+                <DropdownMenuItem onClick={toggleDarkMode}>
                   {isDarkMode ? <Sun /> : <Moon />}
                   {isDarkMode ? "Light mode" : "Dark mode"}
-                </DropdownMenuItem> */}
+                </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem variant="destructive" onClick={signout}>
                   <LogOut />

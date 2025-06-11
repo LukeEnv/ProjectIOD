@@ -1,5 +1,12 @@
 import { Document, Types } from "mongoose";
 
+export interface TaskComment {
+  _id?: Types.ObjectId;
+  userId: Types.ObjectId;
+  comment: string;
+  createdAt: Date;
+}
+
 export interface ITask extends Document {
   title: string;
   requirements: string;
@@ -11,4 +18,5 @@ export interface ITask extends Document {
   createdBy: Types.ObjectId; // User who created the task
   createdAt: Date;
   updatedAt: Date;
+  comments?: TaskComment[];
 }

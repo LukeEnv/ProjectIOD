@@ -1,3 +1,10 @@
+export interface TaskComment {
+  _id?: string;
+  userId: string;
+  comment: string;
+  createdAt: string;
+}
+
 export interface Task {
   _id: string;
   title: string;
@@ -12,4 +19,5 @@ export interface Task {
   createdByUser?: import("./user").User; // Populated creator user object (optional)
   createdAt: string;
   updatedAt: string;
+  comments?: TaskComment[];
 }

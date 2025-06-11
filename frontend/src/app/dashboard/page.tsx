@@ -36,8 +36,15 @@ import {
 // Remove unused PopulatedUser type
 
 export default function Dashboard() {
-  const { tasks, isLoading, isError, createTask, updateTask } =
-    useTasksContext();
+  const {
+    tasks,
+    isLoading,
+    isError,
+    createTask,
+    updateTask,
+    addTaskComment,
+    deleteTask,
+  } = useTasksContext();
   const { user, createCustomer } = useUserContext();
   const { data: allUsers } = useAllUsers();
   const { data: allCustomers } = useAllCustomers();
@@ -51,6 +58,9 @@ export default function Dashboard() {
   const [editMode, setEditMode] = useState(false);
   const [editForm, setEditForm] = useState<Partial<Task>>({});
   const [editSubmitting, setEditSubmitting] = useState(false);
+  const [commentText, setCommentText] = useState("");
+  const [commentSubmitting, setCommentSubmitting] = useState(false);
+  const [deleteSubmitting, setDeleteSubmitting] = useState(false);
 
   type TasksApiResponse = { data: Task[] };
   const taskArray: Task[] = Array.isArray(tasks)
@@ -129,6 +139,37 @@ export default function Dashboard() {
     setSelectedTask(task);
     setEditMode(false);
     setEditForm(task);
+  };
+
+  // Add comment to task
+  const handleAddComment = async () => {
+    if (!selectedTask || !commentText.trim()) return;
+    setCommentSubmitting(true);
+    try {
+      await addTaskComment(selectedTask._id, commentText);
+      setCommentText("");
+      // Refetch the updated task from backend and update selectedTask
+      const res = await fetch(`/api/tasks/${selectedTask._id}`);
+      if (res.ok) {
+        const data = await res.json();
+        // Support both { result, data } and direct data
+        setSelectedTask(data.data || data);
+      }
+    } finally {
+      setCommentSubmitting(false);
+    }
+  };
+
+  // Delete task handler
+  const handleDeleteTask = async () => {
+    if (!selectedTask) return;
+    setDeleteSubmitting(true);
+    try {
+      await deleteTask(selectedTask._id);
+      setSelectedTask(null);
+    } finally {
+      setDeleteSubmitting(false);
+    }
   };
 
   return (
@@ -212,13 +253,25 @@ export default function Dashboard() {
               onChange={handleChange}
               required
             />
-            <Input
-              name="status"
-              placeholder="Status"
+            {/* Status Select for Create Task */}
+            <Select
               value={form.status || ""}
-              onChange={handleChange}
+              onValueChange={(val) => setForm({ ...form, status: val })}
+              name="status"
               required
-            />
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Not Started">Not Started</SelectItem>
+                <SelectItem value="In Progress">In Progress</SelectItem>
+                <SelectItem value="Blocked">Blocked</SelectItem>
+                <SelectItem value="On Hold">On Hold</SelectItem>
+                <SelectItem value="Completed">Completed</SelectItem>
+                <SelectItem value="Cancelled">Cancelled</SelectItem>
+              </SelectContent>
+            </Select>
             <Select
               value={form.userId || ""}
               onValueChange={(val) => setForm({ ...form, userId: val })}
@@ -406,8 +459,48 @@ export default function Dashboard() {
               <div>
                 <strong>Updated At:</strong>{" "}
                 {selectedTask.updatedAt
-                  ? new Date(selectedTask.updatedAt).toLocaleString()
+                  ? new Date(selectedTask.updatedAt).toLocaleDateString()
                   : ""}
+              </div>
+              {/* Comments Section */}
+              <div className="mt-4">
+                <strong>Comments:</strong>
+                <div className="flex flex-col gap-2 mt-2 max-h-40 overflow-y-auto border rounded p-2 bg-muted/50">
+                  {selectedTask.comments && selectedTask.comments.length > 0 ? (
+                    selectedTask.comments.map((c, idx) => (
+                      <div
+                        key={c._id || idx}
+                        className="text-sm border-b last:border-b-0 pb-1"
+                      >
+                        <span className="font-semibold">
+                          {renderUser(c.userId)}
+                        </span>
+                        : {c.comment}
+                        <span className="ml-2 text-xs text-muted-foreground">
+                          {new Date(c.createdAt).toLocaleString()}
+                        </span>
+                      </div>
+                    ))
+                  ) : (
+                    <span className="text-xs text-muted-foreground">
+                      No comments yet.
+                    </span>
+                  )}
+                </div>
+                <div className="flex gap-2 mt-2">
+                  <Input
+                    value={commentText}
+                    onChange={(e) => setCommentText(e.target.value)}
+                    placeholder="Add a comment..."
+                    disabled={commentSubmitting}
+                  />
+                  <Button
+                    onClick={handleAddComment}
+                    disabled={commentSubmitting || !commentText.trim()}
+                  >
+                    {commentSubmitting ? "Adding..." : "Add"}
+                  </Button>
+                </div>
               </div>
             </div>
           )}
@@ -504,15 +597,27 @@ export default function Dashboard() {
                 }
                 required
               />
-              <Input
-                name="status"
-                placeholder="Status"
+              {/* Status Select for Edit Task */}
+              <Select
                 value={editForm.status || ""}
-                onChange={(e) =>
-                  setEditForm({ ...editForm, status: e.target.value })
+                onValueChange={(val) =>
+                  setEditForm({ ...editForm, status: val })
                 }
+                name="status"
                 required
-              />
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Not Started">Not Started</SelectItem>
+                  <SelectItem value="In Progress">In Progress</SelectItem>
+                  <SelectItem value="Blocked">Blocked</SelectItem>
+                  <SelectItem value="On Hold">On Hold</SelectItem>
+                  <SelectItem value="Completed">Completed</SelectItem>
+                  <SelectItem value="Cancelled">Cancelled</SelectItem>
+                </SelectContent>
+              </Select>
               <Select
                 value={editForm.userId || ""}
                 onValueChange={(val) =>
@@ -556,9 +661,23 @@ export default function Dashboard() {
           )}
           <DialogFooter>
             {!editMode && user?.isAdmin && (
-              <Button onClick={() => setEditMode(true)}>Edit</Button>
+              <div className="flex gap-2 w-full justify-between">
+                <Button onClick={() => setEditMode(true)}>Edit</Button>
+                <Button
+                  variant="destructive"
+                  onClick={handleDeleteTask}
+                  disabled={deleteSubmitting}
+                >
+                  {deleteSubmitting ? "Deleting..." : "Delete"}
+                </Button>
+              </div>
             )}
-            <Button onClick={() => setSelectedTask(null)}>Close</Button>
+            <Button
+              onClick={() => setSelectedTask(null)}
+              disabled={deleteSubmitting}
+            >
+              Close
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

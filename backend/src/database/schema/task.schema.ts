@@ -47,6 +47,23 @@ const schema = new Schema<ITask>(
       type: Date,
       default: Date.now,
     },
+    comments: [
+      {
+        userId: {
+          type: Schema.Types.ObjectId,
+          ref: "Users",
+          required: true,
+        },
+        comment: {
+          type: String,
+          required: true,
+        },
+        createdAt: {
+          type: Date,
+          default: Date.now,
+        },
+      },
+    ],
   },
   {
     timestamps: true,

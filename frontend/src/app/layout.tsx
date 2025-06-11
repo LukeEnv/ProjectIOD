@@ -7,6 +7,8 @@ import { TokenProvider } from "@/lib/contexts/token";
 import { UserProvider } from "@/lib/contexts/user";
 import { Toaster } from "sonner";
 
+import { DarkModeProvider } from "@/lib/contexts/darkmode";
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -32,12 +34,14 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <TokenProvider>
-          <UserProvider>
-            <div className="flex h-screen w-screen flex-col">{children}</div>
-          </UserProvider>
-        </TokenProvider>
-        <Toaster richColors />
+        <DarkModeProvider>
+          <TokenProvider>
+            <UserProvider>
+              <div className="flex h-screen w-screen flex-col">{children}</div>
+            </UserProvider>
+          </TokenProvider>
+          <Toaster richColors />
+        </DarkModeProvider>
       </body>
     </html>
   );

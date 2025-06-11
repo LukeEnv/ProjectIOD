@@ -15,6 +15,7 @@ interface TasksContextType {
   createTask: (task: Partial<Task>) => Promise<void>;
   updateTask: (id: string, updates: Partial<Task>) => Promise<void>;
   deleteTask: (id: string) => Promise<void>;
+  addTaskComment: (taskId: string, comment: string) => Promise<void>; // <-- add to context
 }
 
 const TasksContext = createContext<TasksContextType | undefined>(undefined);
@@ -70,6 +71,16 @@ export const TasksProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
+  const addTaskComment = async (taskId: string, comment: string) => {
+    try {
+      await authAxios.post(`/tasks/${taskId}/comments`, { comment });
+      mutate(); // Refetch tasks to update comments
+      toast.success("Comment added");
+    } catch {
+      toast.error("Failed to add comment");
+    }
+  };
+
   return (
     <TasksContext.Provider
       value={{
@@ -80,6 +91,7 @@ export const TasksProvider: React.FC<{ children: React.ReactNode }> = ({
         createTask,
         updateTask,
         deleteTask,
+        addTaskComment, // <-- add to context
       }}
     >
       {children}
