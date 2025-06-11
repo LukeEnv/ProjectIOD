@@ -11,7 +11,7 @@ import { useTokenContext } from "@/lib/contexts/token";
 export default function Login() {
   const form = useForm({
     defaultValues: {
-      email: "",
+      username: "",
       password: "",
     },
   });
@@ -19,15 +19,15 @@ export default function Login() {
   const { refreshAccessToken } = useTokenContext();
 
   const onSubmit = async ({
-    email,
+    username,
     password,
   }: {
-    email: string;
+    username: string;
     password: string;
   }) => {
     try {
       const response = await axios.post("/api/auth/login", {
-        email,
+        username,
         password,
       });
       console.log("Login successful:", response.data);
@@ -51,7 +51,7 @@ export default function Login() {
         <div className="flex flex-col gap-4">
           <FormField
             control={form.control}
-            name="email"
+            name="username"
             render={({ field }) => (
               <Input {...field} placeholder="Username" type="text" />
             )}

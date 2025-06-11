@@ -4,8 +4,8 @@ import userSchema from "../database/schema/user.schema";
 export const findUserByUsername = async (username: string) => {
   // return a promise that resolves to IUser or null
 
-  // Find the user by username
-  const user = await userSchema.findOne({ username });
+  // Find the user by username and include the password field
+  const user = await userSchema.findOne({ username }).select("+password");
 
   // Return the user object
   return user;
